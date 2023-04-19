@@ -30,6 +30,8 @@ def describe_prompt(furniture, description):
         Explain in a clear and concise manner of the interior design of a room containing the following furnitures:\n\"{furniture}\"\n\nThe room and the furniture arragements should be described as follows:\n{description}. \
         You should mention that the furniture is in the room. \
         You should also describe the position of each furnitures in the room. \
+        Do not mention furnitures that are not in the given list.\
+        You should also tell the bot that it should not add any furnitures that are not in the given list.\
         "
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -72,7 +74,7 @@ class ImagineFurniture(DalleFurniture):
         mask_image = None
         mask_mode = "keep"
         mask_modify_original = True
-        mask_prompt = "ceiling"
+        mask_prompt = "ceiling OR crossbeam OR beam OR structure OR windows"
         model_config_path = None
         model_weights_path = config.DEFAULT_MODEL
         negative_prompt = None
@@ -188,6 +190,8 @@ class ImagineFurniture(DalleFurniture):
             make_gif=make_gif,
             make_compare_gif=make_compare_gif,
         )
+
+        horizontal_flip(filenames[0])
         
         return filenames[0]
 
@@ -195,6 +199,7 @@ class ImagineFurniture(DalleFurniture):
 @app.post('/imagine-furniture')
 @cross_origin()
 def imagine_furniture():
+    print("/imagine_furniture")
     timestamp = str(time.time())
     file = request.files.get("file")
     file_bytes: bytes = file.stream.read()
@@ -204,6 +209,7 @@ def imagine_furniture():
 
     furniture = request.form.get("furniture", "<empty>")
     description = request.form.get("description", "<no description>")
+    print('furniture', furniture, 'description', description)
     prompt = describe_prompt(furniture, description)
     print(prompt)
     
